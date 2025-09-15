@@ -47,7 +47,7 @@
 
 在Server汇总梯度，搬运数据的时候，Worker节点出于空转状态，可以通过梯度异步更新来解决：
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-3.png)
+![alt text](https://img.remit.ee/main/image-3.png)
 
 在Worker计算完一轮梯度之后，不会等待聚合梯度返回，而是直接进行写一轮的计算；
 
@@ -55,7 +55,7 @@
 
 延迟步数：最多"跳过"几次参数更新操作：
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-4.png)
+![alt text](https://img.remit.ee/main/image-4.png)
 
 - Sequential: 无延迟
 - Eventual: 不指定延迟步数，“随便”，什么时候更新了什么时候用新参数
@@ -73,16 +73,16 @@
 
 假设为数据大小为N,卡的数量为M,那么经过Reduce-Scatter操作后，每个卡保存N/M大小的Reduce结果：
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-5.png)
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-6.png)
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-7.png)
+![alt text](https://img.remit.ee/main/image-5.png)
+![alt text](https://img.remit.ee/main/image-6.png)
+![alt text](https://img.remit.ee/main/image-7.png)
 
 - **Step 2： All-Gather**
 
 每张卡将自己的结果部分通过环状传递发送给每一张卡：
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-8.png)
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-9.png)
+![alt text](https://img.remit.ee/main/image-8.png)
+![alt text](https://img.remit.ee/main/image-9.png)
 
 以此类推；
 
@@ -90,7 +90,7 @@
 
 把模型的不同层放在不同的GPU上，一个batch的执行过程如下：
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image.png)
+![alt text](https://img.remit.ee/main/image.png)
 
 这种并行方法会带来一些问题：
 
@@ -100,7 +100,7 @@
 
 假设有 <img src="https://www.zhihu.com/equation?tex=K" alt="K" class="ee_img tr_noresize" eeimg="1"> 个GPU，每一块做前向和后向计算的时间是 <img src="https://www.zhihu.com/equation?tex=t_{fb} = t_f + t_b" alt="t_{fb} = t_f + t_b" class="ee_img tr_noresize" eeimg="1"> ,则：
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-1.png)
+![alt text](https://img.remit.ee/main/image-1.png)
 
 - 整个位置整体的面积是 <img src="https://www.zhihu.com/equation?tex=K * (K*t_{fb})" alt="K * (K*t_{fb})" class="ee_img tr_noresize" eeimg="1"> , 实际工作的面积是 <img src="https://www.zhihu.com/equation?tex=K * t_{fb}" alt="K * t_{fb}" class="ee_img tr_noresize" eeimg="1"> 
 - 无用工作的面积是  <img src="https://www.zhihu.com/equation?tex=(K - 1)*t_{fb}" alt="(K - 1)*t_{fb}" class="ee_img tr_noresize" eeimg="1"> , 无用部分占比即为  <img src="https://www.zhihu.com/equation?tex=(K - 1)*K*t_{fb} / K * K*t_{fb} = (K-1)/K" alt="(K - 1)*K*t_{fb} / K * K*t_{fb} = (K-1)/K" class="ee_img tr_noresize" eeimg="1"> 
@@ -111,7 +111,7 @@
 
 流水线并行收到的batch是mini-batch，我们将mini-batch进一步划分为更小的batch(micro-batch)，再送入模型中进行训练：
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-2.png)
+![alt text](https://img.remit.ee/main/image-2.png)
 
 假设每个mini-batch被划分为 <img src="https://www.zhihu.com/equation?tex=M" alt="M" class="ee_img tr_noresize" eeimg="1"> 个micro-batch，bubble的时间复杂度是 <img src="https://www.zhihu.com/equation?tex=O(\frac{K-1}{K+M-1})" alt="O(\frac{K-1}{K+M-1})" class="ee_img tr_noresize" eeimg="1"> ; 经过实验(Gpipe)， <img src="https://www.zhihu.com/equation?tex=M >= 4K" alt="M >= 4K" class="ee_img tr_noresize" eeimg="1"> 时，bubble产生的影响可忽略不计；
 
@@ -133,27 +133,27 @@
 
 1. 行切分
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-10.png)
+![alt text](https://img.remit.ee/main/image-10.png)
 
 将数据按列切分，参数按行切分，前向需要一次all-reduce操作，反向不需要通信：
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-11.png)
+![alt text](https://img.remit.ee/main/image-11.png)
 
 2. 列切分
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-13.png)
+![alt text](https://img.remit.ee/main/image-13.png)
 
 对参数的按列切分，数据不进行切分，前向不需要通信，反向需要一次all-reduce操作：
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-12.png)
+![alt text](https://img.remit.ee/main/image-12.png)
 
 ### MLP切分
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-14.png)
+![alt text](https://img.remit.ee/main/image-14.png)
 
 对A按列切分，对B按行切分，整个MLP过程中，前向反向各一次all-reduce操作：
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-15.png)
+![alt text](https://img.remit.ee/main/image-15.png)
 
 forward：
 
@@ -169,7 +169,7 @@ backward:
 
 对于多头注意力，我们只要按照注意力头进行切分即可（列切分），最后将结果concat；对于后面的线性层，进行行切割；整个过程前后向各一个All-Reduce操作：
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-16.png)
+![alt text](https://img.remit.ee/main/image-16.png)
 
 ### Embedding切分
 
@@ -179,11 +179,11 @@ backward:
 
 ### Cross-entropy层
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-17.png)
+![alt text](https://img.remit.ee/main/image-17.png)
 
 可以进行一个All-Gather操作，然后计算softmax，交叉熵即可，但是这会产生额外的一组通信开销 <img src="https://www.zhihu.com/equation?tex=b*s*v" alt="b*s*v" class="ee_img tr_noresize" eeimg="1"> ；
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-18.png)
+![alt text](https://img.remit.ee/main/image-18.png)
 
 可以在每个GPU上进行求和，再做All-Reduce操作，得到softmax的分母，分别进行softmax、loss计算，最终再进行一次All-Reduce操作聚合loss结果（设通信量为N）;
 
@@ -191,7 +191,7 @@ backward:
 
 ## TP+DP
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-19.png)
+![alt text](https://img.remit.ee/main/image-19.png)
 
 一般将TP的GPU放在同一个机器中，不同的机器上做DP
 的操作，原因如下:
@@ -208,11 +208,11 @@ backward:
 
 对于DP，本层梯度计算完，我们通过All-Reduce得到梯度结果，将结果传递给下一层；
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-20.png)
+![alt text](https://img.remit.ee/main/image-20.png)
 
 而对DP，我们只需要发送出去梯度结果做All-Reduce过程，不需要等待，继续backward；也就是说，下一层不依赖上一层的结果；
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-21.png)
+![alt text](https://img.remit.ee/main/image-21.png)
 
 ## FlashAttention v1
 
@@ -236,17 +236,17 @@ backward:
 
 以A100 40GB为例， <img src="https://www.zhihu.com/equation?tex=\pi_t / \beta_t = (2N^2d) / (2Nd + 2Nd + 2N^2) = (N^2d) / (2Nd + N^2)" alt="\pi_t / \beta_t = (2N^2d) / (2Nd + 2Nd + 2N^2) = (N^2d) / (2Nd + N^2)" class="ee_img tr_noresize" eeimg="1"> ,  <img src="https://www.zhihu.com/equation?tex=\pi / \beta = 201" alt="\pi / \beta = 201" class="ee_img tr_noresize" eeimg="1"> :
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-22.png)
+![alt text](https://img.remit.ee/main/image-22.png)
 
 从表中可以看到，memory-bound的情况还是普遍存在的；
 
 > roof-line模型：横坐标为计算强度，纵坐标为硬件性能，刻画了给定一个算法，硬件的理论速度上限
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-23.png)
+![alt text](https://img.remit.ee/main/image-23.png)
 
 ### GPU结构，以A100为例
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-24.png)
+![alt text](https://img.remit.ee/main/image-24.png)
 
 > SRAM: L1缓存，19TB/s(20 MB)
 
@@ -263,12 +263,12 @@ backward:
 ### forward过程
 
 符号规定：（Attention计算、safe softmax）
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-26.png)
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-27.png)
+![alt text](https://img.remit.ee/main/image-26.png)
+![alt text](https://img.remit.ee/main/image-27.png)
 
 - **Tiling分块流程**
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-25.png)
+![alt text](https://img.remit.ee/main/image-25.png)
 
 1. 将 <img src="https://www.zhihu.com/equation?tex=Q" alt="Q" class="ee_img tr_noresize" eeimg="1"> 矩阵横切为 <img src="https://www.zhihu.com/equation?tex=T_r" alt="T_r" class="ee_img tr_noresize" eeimg="1"> 块，每块的长度为 <img src="https://www.zhihu.com/equation?tex=B_r" alt="B_r" class="ee_img tr_noresize" eeimg="1"> ， <img src="https://www.zhihu.com/equation?tex=Q_i" alt="Q_i" class="ee_img tr_noresize" eeimg="1"> 表示切完后的第i块矩阵，维度为 <img src="https://www.zhihu.com/equation?tex=(B_r, d)" alt="(B_r, d)" class="ee_img tr_noresize" eeimg="1"> ;
 2. 将 <img src="https://www.zhihu.com/equation?tex=K^T" alt="K^T" class="ee_img tr_noresize" eeimg="1"> 矩阵竖切为 <img src="https://www.zhihu.com/equation?tex=T_c" alt="T_c" class="ee_img tr_noresize" eeimg="1"> 块，每块的长度为 <img src="https://www.zhihu.com/equation?tex=B_c" alt="B_c" class="ee_img tr_noresize" eeimg="1"> ， <img src="https://www.zhihu.com/equation?tex=K_j^T" alt="K_j^T" class="ee_img tr_noresize" eeimg="1"> 的维度为 <img src="https://www.zhihu.com/equation?tex=(d, B_c)" alt="(d, B_c)" class="ee_img tr_noresize" eeimg="1"> ;
@@ -287,8 +287,8 @@ for 1 <= j <= Tc:
         do....
 ```
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-28.png)
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-29.png)
+![alt text](https://img.remit.ee/main/image-28.png)
+![alt text](https://img.remit.ee/main/image-29.png)
 
 - **safe softmax**
 
@@ -307,7 +307,7 @@ for 1 <= j <= Tc:
 
 整体的伪代码如下：
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-30.png)
+![alt text](https://img.remit.ee/main/image-30.png)
 
 一些符号的补充定义：
  <img src="https://www.zhihu.com/equation?tex=S_{ij}" alt="S_{ij}" class="ee_img tr_noresize" eeimg="1"> : QK小块相乘的结果；
@@ -321,13 +321,13 @@ for 1 <= j <= Tc:
  <img src="https://www.zhihu.com/equation?tex=l_i" alt="l_i" class="ee_img tr_noresize" eeimg="1"> ：与 <img src="https://www.zhihu.com/equation?tex=m_i" alt="m_i" class="ee_img tr_noresize" eeimg="1"> 同理；
  <img src="https://www.zhihu.com/equation?tex=l_i^{new}" alt="l_i^{new}" class="ee_img tr_noresize" eeimg="1"> : 与 <img src="https://www.zhihu.com/equation?tex=m_i^{new}" alt="m_i^{new}" class="ee_img tr_noresize" eeimg="1"> 同理；
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-31.png)
+![alt text](https://img.remit.ee/main/image-31.png)
 
 **O的更新**
 
 被圈出的部分的S、P部分的乘积即为最终的 <img src="https://www.zhihu.com/equation?tex=O_i" alt="O_i" class="ee_img tr_noresize" eeimg="1"> :
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-32.png)
+![alt text](https://img.remit.ee/main/image-32.png)
 
 我们的思路是： <img src="https://www.zhihu.com/equation?tex=O_i = O_i + 最新的结果" alt="O_i = O_i + 最新的结果" class="ee_img tr_noresize" eeimg="1"> ，通过迭代的方式计算 <img src="https://www.zhihu.com/equation?tex=O" alt="O" class="ee_img tr_noresize" eeimg="1"> 的结果：
 
@@ -389,11 +389,11 @@ for 1 <= j <= Tc:
 
 - 标准backward计算
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-33.png)
+![alt text](https://img.remit.ee/main/image-33.png)
 
 - 分块backward计算
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-34.png)
+![alt text](https://img.remit.ee/main/image-34.png)
 
 11-15行：重计算过程
 
@@ -530,7 +530,7 @@ _bwd_kernel对K维度进行分块执行，调用_bwd_kernel_one_col_block实现�
 
 ### forward过程
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-35.png)
+![alt text](https://img.remit.ee/main/image-35.png)
 
 我们可以看一下和v1版本在forward上的主要变化：
 
@@ -540,7 +540,7 @@ _bwd_kernel对K维度进行分块执行，调用_bwd_kernel_one_col_block实现�
 
 ### backward过程
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-36.png)
+![alt text](https://img.remit.ee/main/image-36.png)
 
 在backward中，循环的顺序又和v1相同了，原因如下：
 
@@ -556,18 +556,18 @@ _bwd_kernel对K维度进行分块执行，调用_bwd_kernel_one_col_block实现�
 通过这种方法，减少了原本l, m的读写量
 
 这张图展示了循环层次不同，worker的分割方式是不同的：
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-39.png)
+![alt text](https://img.remit.ee/main/image-39.png)
 
 ### Thread Blocks优化
 
 v2 新增了seq_len维度的分块，将seq_len划分为num_m_block份，每份长度kBlockM，block的数量由batch_size * num_heads变为了batch_size * num_heads * num_m_block；**这一操作的目的是尽量将SM吃满**。
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-37.png)
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-38.png)
+![alt text](https://img.remit.ee/main/image-37.png)
+![alt text](https://img.remit.ee/main/image-38.png)
 
 ### Wrap层并行
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-40.png)
+![alt text](https://img.remit.ee/main/image-40.png)
 
 对于v1，每个wrap在列方向上的对应结果，需要不同wrap之间通信，对结果聚合才能得到最终的 <img src="https://www.zhihu.com/equation?tex=O" alt="O" class="ee_img tr_noresize" eeimg="1"> ,而v2中，不同wrap中的计算是独立的，不需要进行wrap之间的通讯；
 
@@ -580,13 +580,13 @@ v3基于Hopper架构进行优化，遂简单了解一番Hopper架构。
 1. 更强的SM，相比于A100，SM更多（132个），运算速度更强
 2. FP8 Tensor core: 对FP8运算更加兼容
 3. Thread Block Cluster：在Thread Block上新增一个 Thread Block Cluster 层，能更灵活地调度空间：
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-41.png)
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-42.png)
+![alt text](https://img.remit.ee/main/image-41.png)
+![alt text](https://img.remit.ee/main/image-42.png)
 Thread Block Cluster 在硬件上对应Graph Processing Cluster（GPC），GPC提供了SM-to-SM Network，加速不同SM之间的数据传输，资料存放的位置为distributed shared memory (DSMEM)：
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-43.png)
+![alt text](https://img.remit.ee/main/image-43.png)
 每个Thread Block也成为cooperative thread arrays (CTA，后面有用)，对应SM；
 4. Tensor Memory Accelerator（TMA）:新功能，能够使SM的计算任务与数据传输任务重叠：
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-44.png)
+![alt text](https://img.remit.ee/main/image-44.png)
 5. Register Dynamic Reallocation：Wrap Group中的register可以做reallocate，能够让我们有更多的RMEM能够使用；
 
 ### 算法1：数据搬运、计算异步（Warp-specialization）
@@ -598,7 +598,7 @@ Warp-specialization是指将Thread Block中的wraps分成Producer Warp Group和C
 > Producer：对应上面提到的TMA，做数据搬运工作（从HBM拉取到SMEM）
 > Consumer：对应Tensor Core，负责计算任务
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-45.png)
+![alt text](https://img.remit.ee/main/image-45.png)
 
 Producer: 现将 <img src="https://www.zhihu.com/equation?tex=Q_i" alt="Q_i" class="ee_img tr_noresize" eeimg="1"> 先搬运到SMEM中，在根据Consumer的需求将 <img src="https://www.zhihu.com/equation?tex=K_i, V_i" alt="K_i, V_i" class="ee_img tr_noresize" eeimg="1"> 搬运到SMEM中；
 Consumer: 和v2的算法是相近的，只是在使用QKV之前多了等待加载的动作；
@@ -611,27 +611,27 @@ Consumer: 和v2的算法是相近的，只是在使用QKV之前多了等待加�
 
 我们现在有两个warp group，我们可以强制warp group 2在GEMM0做完后，warp group 1才能做GEMM1，这样就完成了计算上的重叠：
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-46.png)
+![alt text](https://img.remit.ee/main/image-46.png)
 
 ### 算法3：Intra-warpgroup overlapping
 
 对于一个wrap group我们也能做相同的事情，只要让GEMM1延迟到下一轮计算中softmax的计算开始时即可：
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-47.png)
+![alt text](https://img.remit.ee/main/image-47.png)
 
 伪代码如下：
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-48.png)
+![alt text](https://img.remit.ee/main/image-48.png)
 
 ### 算法4：3-stage pipelining
 
 和上一个算法是类似的，核心思路是，在softmax的运算时间比GEMM长，我们可以在第i轮的softmax期间，完成i+1轮的GEMM0和第i-1轮的GEMM1：
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-49.png)
+![alt text](https://img.remit.ee/main/image-49.png)
 
 伪代码如下：
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-50.png)
+![alt text](https://img.remit.ee/main/image-50.png)
 
 **FP8优化、backward**：
 
@@ -776,7 +776,7 @@ def _initialize_distributed():
 
 对于initialize_model_parallel，我们看一下他的划分方式：
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-51.png)
+![alt text](https://img.remit.ee/main/image-51.png)
 
 所有的节点构成一个进程大组；
 一份模型参数应该在一个MP(Model Parallism)组上，对图中：[[g0, g1, g4, g5, g8, g9, g12, g13], [g2, g3, g6, g7, g10, g11, g14, g15]]
@@ -1007,7 +1007,7 @@ class MegatronModule(torch.nn.Module): #继承自nn.Module
 
 下面我们来看CodeGeeX中各个类的实现：
 
-![alt text](https://raw.githubusercontent.com/BaideBear/Markdown4Zhihu/master/Data/main/image-52.png)
+![alt text](https://img.remit.ee/main/image-52.png)
 
 首先是Embedding类，类中实现了word embeddings以及position embeddings（nn.Embedding），我们主要看一下word embeddings的并行实现VocabParallelEmbedding：
 
